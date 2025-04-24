@@ -13,24 +13,24 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'What are the advantages',
-      label: 'of using Next.js?',
-      action: 'What are the advantages of using Next.js?',
+      title: 'Analyze the claim',
+      label: 'that all sentient beings have Buddha-nature',
+      action: "I'd like to analyze the claim that 'all sentient beings have Buddha-nature' using Buddhist logical reasoning. Can you help me construct a valid argument with proper evidence and pervasion?",
     },
     {
-      title: 'Write code to',
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      title: 'Explain how to prove',
+      label: 'impermanence with the three modes of evidence',
+      action: "In Buddhist philosophy, can you explain how we might prove impermanence using the three modes of correct evidence? I'm particularly interested in understanding how nature-evidence works in this context.",
     },
     {
-      title: 'Help me write an essay',
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
+      title: 'Break down the inference',
+      label: 'of fire on the mountain from smoke',
+      action: "I've heard the classic example 'there is fire on the mountain because there is smoke.' Could you break down this inference using the formal structure of Buddhist logic and explain why it constitutes valid knowledge?",
     },
     {
-      title: 'What is the weather',
-      label: 'in San Francisco?',
-      action: 'What is the weather in San Francisco?',
+      title: 'Analyze the statement',
+      label: 'that mind is non-physical using Buddhist logic',
+      action: "How would Buddhist logic analyze the statement 'mind is non-physical because it lacks material characteristics'? Does this argument satisfy the three modes of correct evidence?",
     },
   ];
 
