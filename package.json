@@ -41,6 +41,7 @@
     "@vercel/postgres": "^0.10.0",
     "ai": "4.3.4",
     "bcrypt-ts": "^5.0.2",
+    "bfg": "^0.3.0",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",

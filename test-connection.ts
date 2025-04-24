@@ -5,12 +5,6 @@ config({ path: '.env.local' });
 
 async function testConnection() {
   const connectionString = process.env.POSTGRES_URL;
-  
-  if (!connectionString) {
-    console.error('Error: POSTGRES_URL environment variable is not set');
-    return;
-  }
-  
   console.log('Testing connection to:', connectionString);
   
   try {
