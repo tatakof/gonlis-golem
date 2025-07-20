@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { memo } from 'react';
-import { UseChatHelpers } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -13,24 +13,24 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'Analyze the claim',
-      label: 'that all sentient beings have Buddha-nature',
-      action: "I'd like to analyze the claim that 'all sentient beings have Buddha-nature' using Buddhist logical reasoning. Can you help me construct a valid argument with proper evidence and pervasion?",
+      title: 'Start with classic thesis:',
+      label: 'Sound is impermanent',
+      action: 'Take the subject "sound", it follows it is impermanent.',
     },
     {
-      title: 'Explain how to prove',
-      label: 'impermanence with the three modes of evidence',
-      action: "In Buddhist philosophy, can you explain how we might prove impermanence using the three modes of correct evidence? I'm particularly interested in understanding how nature-evidence works in this context.",
+      title: 'Challenge permanence:',
+      label: 'Sound is permanent',
+      action: 'Take the subject "sound", it follows it is permanent.',
     },
     {
-      title: 'Break down the inference',
-      label: 'of fire on the mountain from smoke',
-      action: "I've heard the classic example 'there is fire on the mountain because there is smoke.' Could you break down this inference using the formal structure of Buddhist logic and explain why it constitutes valid knowledge?",
+      title: 'Debate mind thesis:',
+      label: 'Mind is produced',
+      action: 'Take the subject "mind", it follows it is produced.',
     },
     {
-      title: 'Analyze the statement',
-      label: 'that mind is non-physical using Buddhist logic',
-      action: "How would Buddhist logic analyze the statement 'mind is non-physical because it lacks material characteristics'? Does this argument satisfy the three modes of correct evidence?",
+      title: 'Test relationship:',
+      label: 'Produced and impermanent',
+      action: 'Take "produced" and "impermanent", it follows they have a relationship in terms of being a predicate.',
     },
   ];
 

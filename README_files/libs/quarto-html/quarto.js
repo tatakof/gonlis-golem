@@ -20,18 +20,18 @@ const layoutMarginEls = () => {
       const top = marginChild.getBoundingClientRect().top + window.scrollY;
       if (top < lastBottom) {
         const marginChildStyle = window.getComputedStyle(marginChild);
-        const marginBottom = parseFloat(marginChildStyle["marginBottom"]);
+        const marginBottom = Number.parseFloat(marginChildStyle.marginBottom);
         const margin = lastBottom - top + marginBottom;
         marginChild.style.marginTop = `${margin}px`;
       }
       const styles = window.getComputedStyle(marginChild);
-      const marginTop = parseFloat(styles["marginTop"]);
+      const marginTop = Number.parseFloat(styles.marginTop);
       lastBottom = top + marginChild.getBoundingClientRect().height + marginTop;
     }
   }
 };
 
-window.document.addEventListener("DOMContentLoaded", function (_event) {
+window.document.addEventListener("DOMContentLoaded", (_event) => {
   // Recompute the position of margin elements anytime the body size changes
   if (window.ResizeObserver) {
     const resizeObserver = new window.ResizeObserver(
@@ -209,7 +209,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
     if (projRelativeUrl.startsWith("/")) {
       return projRelativeUrl;
     } else {
-      return "/" + projRelativeUrl;
+      return `/${projRelativeUrl}`;
     }
   }
 
@@ -227,15 +227,15 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
   async function findAndActivateCategories() {
     const currentPagePath = offsetAbsoluteUrl(window.location.href);
     const response = await fetch(offsetRelativeUrl("listings.json"));
-    if (response.status == 200) {
-      return response.json().then(function (listingPaths) {
+    if (response.status === 200) {
+      return response.json().then((listingPaths) => {
         const listingHrefs = [];
         for (const listingPath of listingPaths) {
           const pathWithoutLeadingSlash = listingPath.listing.substring(1);
           for (const item of listingPath.items) {
             if (
               item === currentPagePath ||
-              item === currentPagePath + "index.html"
+              item === `${currentPagePath}index.html`
             ) {
               // Resolve this path against the offset to be sure
               // we already are using the correct path to the listing
@@ -263,7 +263,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
           const referrerListing = listingHrefs.find((listingHref) => {
             const isListingReferrer =
               listingHref === referredRelativePath ||
-              listingHref === referredRelativePath + "index.html";
+              listingHref === `${referredRelativePath}index.html`;
             return isListingReferrer;
           });
 
@@ -486,7 +486,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
         `${id} .column-margin, .tabset-margin-content`
       );
       if (columnEl)
-        tabEl.addEventListener("shown.bs.tab", function (event) {
+        tabEl.addEventListener("shown.bs.tab", (event) => {
           const el = event.srcElement;
           if (el) {
             const visibleCls = `${el.id}-margin-content`;
@@ -502,8 +502,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
             if (panelTabsetEl) {
               const prevSib = panelTabsetEl.previousElementSibling;
               if (
-                prevSib &&
-                prevSib.classList.contains("tabset-margin-container")
+                prevSib?.classList.contains("tabset-margin-container")
               ) {
                 const childNodes = prevSib.querySelectorAll(
                   ".tabset-margin-content"
@@ -572,7 +571,7 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
     }
 
     const hasMarginCaption = Array.from(el.classList).find((className) => {
-      return className == "margin-caption";
+      return className === "margin-caption";
     });
     if (hasMarginCaption) {
       return true;
@@ -896,7 +895,7 @@ function throttle(func, wait) {
     if (!waiting) {
       func.apply(this, arguments);
       waiting = true;
-      setTimeout(function () {
+      setTimeout(() => {
         waiting = false;
       }, wait);
     }

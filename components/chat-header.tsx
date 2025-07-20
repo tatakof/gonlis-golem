@@ -12,6 +12,8 @@ import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
+import { SystemPromptEditor } from './system-prompt-editor';
+import { ComplianceToggle } from './compliance-toggle';
 
 function PureChatHeader({
   chatId,
@@ -65,6 +67,14 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />
+      )}
+
+      {!isReadonly && (
+        <SystemPromptEditor className="order-1 md:order-4" />
+      )}
+
+      {!isReadonly && (
+        <ComplianceToggle className="order-1 md:order-5" />
       )}
 
       <Button

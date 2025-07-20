@@ -1,4 +1,4 @@
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
@@ -462,8 +462,6 @@ Would you like me to explore alternative evidence for plant consciousness, or wo
 </example_3>
 </few_shot_examples>
 
-
-
 `;
 
 
@@ -478,15 +476,38 @@ export const regularPrompt = BUDDHIST_LOGIC_SYSTEM_PROMPT2
 // export const regularPrompt =
 //   'You are a friendly assistant! Keep your responses concise and helpful.';
 
-export const systemPrompt = ({
+// Function to get custom system prompt from storage
+async function getCustomSystemPrompt(): Promise<string> {
+  try {
+    const { readFile } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    const { existsSync } = await import('node:fs');
+    
+    const STORAGE_DIR = join(process.cwd(), 'data');
+    const PROMPT_FILE = join(STORAGE_DIR, 'system-prompt.txt');
+    
+    if (existsSync(PROMPT_FILE)) {
+      return await readFile(PROMPT_FILE, 'utf-8');
+    }
+  } catch (error) {
+    console.error('Failed to read custom system prompt:', error);
+  }
+  
+  // Return default if no custom prompt found
+  return regularPrompt;
+}
+
+export const systemPrompt = async ({
   selectedChatModel,
 }: {
   selectedChatModel: string;
 }) => {
+  const basePrompt = await getCustomSystemPrompt();
+  
   if (selectedChatModel === 'chat-model-reasoning') {
-    return regularPrompt;
+    return basePrompt;
   } else {
-    return `${regularPrompt}\n\n${artifactsPrompt}`;
+    return `${basePrompt}\n\n${artifactsPrompt}`;
   }
 };
 

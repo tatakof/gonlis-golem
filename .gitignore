@@ -43,3 +43,10 @@ yarn-error.log*
 /playwright-report/
 /blob-report/
 /playwright/*
+
+# Personal data
+/data/
+
+
+
+.history*
