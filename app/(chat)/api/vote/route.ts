@@ -11,9 +11,14 @@ export async function GET(request: Request) {
 
   const session = await auth();
 
-  if (!session || !session.user || !session.user.email) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // Skip auth check for personal use - create a dummy session
+  const actualSession = session || {
+    user: { id: 'personal-user', email: 'personal@localhost' }
+  } as any;
+
+  // if (!session || !session.user || !session.user.email) {
+  //   return new Response('Unauthorized', { status: 401 });
+  // }
 
   const chat = await getChatById({ id: chatId });
 
@@ -21,9 +26,10 @@ export async function GET(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // Skip ownership check for personal use
+  // if (chat.userId !== session.user.id) {
+  //   return new Response('Unauthorized', { status: 401 });
+  // }
 
   const votes = await getVotesByChatId({ id: chatId });
 
@@ -44,9 +50,14 @@ export async function PATCH(request: Request) {
 
   const session = await auth();
 
-  if (!session || !session.user || !session.user.email) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // Skip auth check for personal use - create a dummy session
+  const actualSession = session || {
+    user: { id: 'personal-user', email: 'personal@localhost' }
+  } as any;
+
+  // if (!session || !session.user || !session.user.email) {
+  //   return new Response('Unauthorized', { status: 401 });
+  // }
 
   const chat = await getChatById({ id: chatId });
 
@@ -54,9 +65,10 @@ export async function PATCH(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  // Skip ownership check for personal use
+  // if (chat.userId !== session.user.id) {
+  //   return new Response('Unauthorized', { status: 401 });
+  // }
 
   await voteMessage({
     chatId,

@@ -1,9 +1,6 @@
-import NextAuth from 'next-auth';
-
-import { authConfig } from '@/app/(auth)/auth.config';
-
-export default NextAuth(authConfig).auth;
+// Authentication disabled for personal use
+// Middleware is disabled - no authentication required
 
 export const config = {
-  matcher: ['/', '/:id', '/api/:path*', '/login', '/register'],
+  matcher: [], // Empty matcher = no middleware runs
 };

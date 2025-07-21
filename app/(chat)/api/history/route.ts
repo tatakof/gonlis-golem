@@ -18,13 +18,18 @@ export async function GET(request: NextRequest) {
 
   const session = await auth();
 
-  if (!session?.user?.id) {
-    return Response.json('Unauthorized!', { status: 401 });
-  }
+  // Skip auth check for personal use - create a dummy session
+  const actualSession = session || {
+    user: { id: 'personal-user', email: 'personal@localhost' }
+  } as any;
+
+  // if (!session?.user?.id) {
+  //   return Response.json('Unauthorized!', { status: 401 });
+  // }
 
   try {
     const chats = await getChatsByUserId({
-      id: session.user.id,
+      id: actualSession.user.id,
       limit,
       startingAfter,
       endingBefore,

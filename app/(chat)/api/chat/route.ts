@@ -78,30 +78,35 @@ export async function POST(request: Request) {
 
     const chat = await getChatById({ id });
 
+    let chatSaveSuccess = true;
     if (!chat) {
       const title = await generateTitleFromUserMessage({
         message: userMessage,
       });
 
-      await saveChat({ id, userId: actualSession.user.id, title });
+      const saveResult = await saveChat({ id, userId: actualSession.user.id, title });
+      chatSaveSuccess = saveResult.success;
     } else {
       if (chat.userId !== actualSession.user.id) {
         return new Response('Forbidden', { status: 403 });
       }
     }
 
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: userMessage.id,
-          role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
-        },
-      ],
-    });
+    // Only save messages if chat was saved successfully or already exists
+    if (chatSaveSuccess || chat) {
+      await saveMessages({
+        messages: [
+          {
+            chatId: id,
+            id: userMessage.id,
+            role: 'user',
+            parts: userMessage.parts,
+            attachments: userMessage.experimental_attachments ?? [],
+            createdAt: new Date(),
+          },
+        ],
+      });
+    }
 
     return createDataStreamResponse({
       execute: async (dataStream) => {
@@ -256,8 +261,8 @@ export async function POST(request: Request) {
             }
           }
 
-          // Save the message if user is authenticated
-          if (actualSession.user?.id) {
+          // Save the message if user is authenticated and chat exists
+          if (actualSession.user?.id && (chatSaveSuccess || chat)) {
             try {
               const assistantId = generateUUID();
               await saveMessages({
@@ -307,6 +312,10 @@ export async function DELETE(request: Request) {
 
   try {
     const chat = await getChatById({ id });
+
+    if (!chat) {
+      return new Response('Chat not found', { status: 404 });
+    }
 
     if (chat.userId !== session.user.id) {
       return new Response('Forbidden', { status: 403 });

@@ -67,15 +67,17 @@ export async function saveChat({
   title: string;
 }) {
   try {
-    return await db.insert(chat).values({
+    const result = await db.insert(chat).values({
       id,
       createdAt: new Date(),
       userId,
       title,
     });
+    return { success: true, result };
   } catch (error) {
     console.error('Failed to save chat in database');
-    throw error;
+    // For personal use without database, return failure status
+    return { success: false, result: [] };
   }
 }
 
@@ -159,7 +161,11 @@ export async function getChatsByUserId({
     };
   } catch (error) {
     console.error('Failed to get chats by user from database');
-    throw error;
+    // For personal use without database, return empty chats
+    return {
+      chats: [],
+      hasMore: false,
+    };
   }
 }
 
@@ -169,7 +175,8 @@ export async function getChatById({ id }: { id: string }) {
     return selectedChat;
   } catch (error) {
     console.error('Failed to get chat by id from database');
-    throw error;
+    // For personal use without database, return null (no existing chat)
+    return null;
   }
 }
 
@@ -179,10 +186,12 @@ export async function saveMessages({
   messages: Array<DBMessage>;
 }) {
   try {
-    return await db.insert(message).values(messages);
+    const result = await db.insert(message).values(messages);
+    return { success: true, result };
   } catch (error) {
     console.error('Failed to save messages in database', error);
-    throw error;
+    // For personal use without database, return failure status
+    return { success: false, result: [] };
   }
 }
 
@@ -195,7 +204,8 @@ export async function getMessagesByChatId({ id }: { id: string }) {
       .orderBy(asc(message.createdAt));
   } catch (error) {
     console.error('Failed to get messages by chat id from database', error);
-    throw error;
+    // For personal use without database, return empty messages
+    return [];
   }
 }
 
