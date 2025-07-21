@@ -64,7 +64,7 @@ function PureArtifact({
   messages,
   setMessages,
   reload,
-  votes,
+
   isReadonly,
 }: {
   chatId: string;
@@ -76,7 +76,7 @@ function PureArtifact({
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers['setMessages'];
-  votes: Array<Vote> | undefined;
+
   append: UseChatHelpers['append'];
   handleSubmit: UseChatHelpers['handleSubmit'];
   reload: UseChatHelpers['reload'];
@@ -313,7 +313,7 @@ function PureArtifact({
                 <ArtifactMessages
                   chatId={chatId}
                   status={status}
-                  votes={votes}
+
                   messages={messages}
                   setMessages={setMessages}
                   reload={reload}
@@ -500,7 +500,7 @@ function PureArtifact({
 
 export const Artifact = memo(PureArtifact, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
-  if (!equal(prevProps.votes, nextProps.votes)) return false;
+
   if (prevProps.input !== nextProps.input) return false;
   if (!equal(prevProps.messages, nextProps.messages.length)) return false;
 
