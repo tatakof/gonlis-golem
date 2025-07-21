@@ -112,73 +112,76 @@ export async function POST(request: Request) {
       execute: async (dataStream) => {
         const systemPromptText = await systemPrompt({ selectedChatModel });
         
-        // Helper function to generate response with compliance checking
-        const generateWithCompliance = async (attempt = 1, maxAttempts = 3): Promise<void> => {
-          const result = streamText({
-            model: myProvider.languageModel(selectedChatModel),
-            system: systemPromptText,
-            messages,
-            maxSteps: 5,
-            experimental_activeTools:
-              selectedChatModel === 'chat-model-reasoning'
-                ? []
-                : [
-                    'getWeather',
-                    'createDocument',
-                    'updateDocument',
-                    'requestSuggestions',
-                  ],
-            experimental_transform: smoothStream({ chunking: 'word' }),
-            experimental_generateMessageId: generateUUID,
-            tools: {
-              getWeather,
-              createDocument: createDocument({ session: actualSession, dataStream }),
-              updateDocument: updateDocument({ session: actualSession, dataStream }),
-              requestSuggestions: requestSuggestions({
-                session: actualSession,
-                dataStream,
-              }),
-            },
-            experimental_telemetry: {
-              isEnabled: isProductionEnvironment,
-              functionId: 'stream-text',
-            },
-          });
+        // Check if compliance is enabled
+        const complianceEnabled = await isComplianceEnabled();
+        
+        const result = streamText({
+          model: myProvider.languageModel(selectedChatModel),
+          system: systemPromptText,
+          messages,
+          maxSteps: 5,
+          experimental_activeTools:
+            selectedChatModel === 'chat-model-reasoning'
+              ? []
+              : [
+                  'getWeather',
+                  'createDocument',
+                  'updateDocument',
+                  'requestSuggestions',
+                ],
+          experimental_transform: smoothStream({ chunking: 'word' }),
+          experimental_generateMessageId: generateUUID,
+          tools: {
+            getWeather,
+            createDocument: createDocument({ session: actualSession, dataStream }),
+            updateDocument: updateDocument({ session: actualSession, dataStream }),
+            requestSuggestions: requestSuggestions({
+              session: actualSession,
+              dataStream,
+            }),
+          },
+          experimental_telemetry: {
+            isEnabled: isProductionEnvironment,
+            functionId: 'stream-text',
+          },
+        });
 
-          // Collect the full response for compliance checking
-          let fullResponse = '';
-          const { textStream } = result;
-          
-          for await (const chunk of textStream) {
-            fullResponse += chunk;
+        // Collect the full response
+        const { textStream } = result;
+        let fullResponse = '';
+        
+        for await (const chunk of textStream) {
+          fullResponse += chunk;
+        }
+
+        // Handle compliance checking if enabled
+        if (selectedChatModel === 'chat-model-reasoning' && complianceEnabled) {
+          // Extract user content for compliance check
+          let userContent = '';
+          if (typeof userMessage.content === 'string') {
+            userContent = userMessage.content;
+          } else if (userMessage.content && (userMessage.content as any).length) {
+            userContent = (userMessage.content as any)
+              .filter((part: any) => part.type === 'text')
+              .map((part: any) => part.text)
+              .join(' ');
           }
-
-          // Check compliance for dialectical debate system (if enabled)
-          const complianceEnabled = await isComplianceEnabled();
-          if (selectedChatModel === 'chat-model-reasoning' && complianceEnabled) {
-            // Extract text content from user message
-            let userContent = '';
-            if (typeof userMessage.content === 'string') {
-              userContent = userMessage.content;
-            } else if (userMessage.content && (userMessage.content as any).length) {
-              userContent = (userMessage.content as any)
-                .filter((part: any) => part.type === 'text')
-                .map((part: any) => part.text)
-                .join(' ');
-            }
-            
+          
+          try {
             const complianceResult = await checkCompliance(userContent, fullResponse);
             
-            if (!complianceResult.isCompliant && attempt < maxAttempts) {
-              console.log(`Attempt ${attempt}: Non-compliant response detected: ${complianceResult.reason}`);
+            if (!complianceResult.isCompliant) {
+              // Show compliance notice
+              const notice = `*[Compliance check failed: ${complianceResult.reason || 'Not compliant with debate rules'}. Generating compliant response...]*\n\n`;
+              for (const char of notice) {
+                dataStream.writeData({
+                  type: 'text-delta',
+                  content: char,
+                });
+                await new Promise(resolve => setTimeout(resolve, 10));
+              }
               
-              // Notify user that we're regenerating for compliance
-              dataStream.writeData({
-                type: 'text-delta',
-                content: '\n\n*[Regenerating response to comply with debate rules...]*\n\n',
-              });
-              
-              // Generate a compliant response
+              // Generate compliant response
               const conversationHistory = messages.map(msg => {
                 let content = '';
                 if (typeof msg.content === 'string') {
@@ -200,90 +203,71 @@ export async function POST(request: Request) {
                 conversationHistory
               );
               
-              // Stream the compliant response
-              for (const char of compliantResponse) {
-                dataStream.writeData({
-                  type: 'text-delta',
-                  content: char,
-                });
-                // Small delay to simulate streaming
-                await new Promise(resolve => setTimeout(resolve, 20));
-              }
-              
               fullResponse = compliantResponse;
-            } else if (!complianceResult.isCompliant) {
-              console.log(`Max attempts reached. Using response: ${fullResponse}`);
-              // Stream the final response even if not compliant
-              for (const char of fullResponse) {
-                dataStream.writeData({
-                  type: 'text-delta',
-                  content: char,
-                });
-                await new Promise(resolve => setTimeout(resolve, 20));
-              }
             } else {
-              // Response is compliant, stream it
-              for (const char of fullResponse) {
+              // Show compliance passed notice
+              const notice = '*[Compliance check passed - streaming response]*\n\n';
+              for (const char of notice) {
                 dataStream.writeData({
                   type: 'text-delta',
                   content: char,
                 });
-                await new Promise(resolve => setTimeout(resolve, 20));
+                await new Promise(resolve => setTimeout(resolve, 10));
               }
             }
-          } else if (selectedChatModel === 'chat-model-reasoning' && !complianceEnabled) {
-            // Reasoning model with compliance disabled - show indicator
-            const indicator = '*[Compliance checking disabled - free-form response]*\n\n';
-            for (const char of indicator) {
+          } catch (error) {
+            console.error('Compliance check error:', error);
+            // If compliance check fails, just show a notice and continue
+            const notice = '*[Compliance check error - showing original response]*\n\n';
+            for (const char of notice) {
               dataStream.writeData({
                 type: 'text-delta',
                 content: char,
               });
               await new Promise(resolve => setTimeout(resolve, 10));
             }
-            
-            // Then stream the actual response
-            for (const char of fullResponse) {
-              dataStream.writeData({
-                type: 'text-delta',
-                content: char,
-              });
-              await new Promise(resolve => setTimeout(resolve, 20));
-            }
-          } else {
-            // For non-reasoning models, just stream the response normally
-            for (const char of fullResponse) {
-              dataStream.writeData({
-                type: 'text-delta',
-                content: char,
-              });
-              await new Promise(resolve => setTimeout(resolve, 20));
-            }
           }
-
-          // Save the message if user is authenticated and chat exists
-          if (actualSession.user?.id && (chatSaveSuccess || chat)) {
-            try {
-              const assistantId = generateUUID();
-              await saveMessages({
-                messages: [
-                  {
-                    id: assistantId,
-                    chatId: id,
-                    role: 'assistant',
-                    parts: [{ type: 'text', text: fullResponse }],
-                    attachments: [],
-                    createdAt: new Date(),
-                  },
-                ],
-              });
-            } catch (error) {
-              console.error('Failed to save chat:', error);
-            }
+        } else if (selectedChatModel === 'chat-model-reasoning' && !complianceEnabled) {
+          // Show compliance disabled notice
+          const notice = '*[Compliance checking disabled - free-form response]*\n\n';
+          for (const char of notice) {
+            dataStream.writeData({
+              type: 'text-delta',
+              content: char,
+            });
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
-        };
+        }
 
-        await generateWithCompliance();
+        // Stream the final response
+        for (const char of fullResponse) {
+          dataStream.writeData({
+            type: 'text-delta',
+            content: char,
+          });
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+
+        // Save the message if user is authenticated and chat exists
+        if (actualSession.user?.id && (chatSaveSuccess || chat)) {
+          try {
+            const assistantId = generateUUID();
+            await saveMessages({
+              messages: [
+                {
+                  id: assistantId,
+                  chatId: id,
+                  role: 'assistant',
+                  parts: [{ type: 'text', text: fullResponse }],
+                  attachments: [],
+                  createdAt: new Date(),
+                },
+              ],
+            });
+          } catch (error) {
+            console.error('Failed to save assistant message:', error);
+          }
+        }
       },
       onError: () => {
         return 'Oops, an error occurred!';

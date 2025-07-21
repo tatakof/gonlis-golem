@@ -62,6 +62,7 @@ Is this AI response compliant with the dialectical debate rules?
     }
 
     const trimmedResult = result.trim();
+    console.log('Compliance check result:', trimmedResult);
     
     if (trimmedResult.startsWith('COMPLIANT')) {
       return { isCompliant: true };
@@ -69,8 +70,9 @@ Is this AI response compliant with the dialectical debate rules?
       const reason = trimmedResult.replace('NON_COMPLIANT:', '').trim();
       return { isCompliant: false, reason };
     } else {
-      // Default to non-compliant if unclear
-      return { isCompliant: false, reason: 'Unclear compliance status' };
+      // If unclear, default to compliant to avoid blocking responses
+      console.log('Unclear compliance result, defaulting to compliant');
+      return { isCompliant: true };
     }
   } catch (error) {
     console.error('Compliance check failed:', error);
